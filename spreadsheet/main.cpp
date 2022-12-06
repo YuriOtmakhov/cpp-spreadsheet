@@ -1,6 +1,8 @@
 #include "common.h"
 #include "formula.h"
 #include "test_runner_p.h"
+#include <limits>
+#include <iostream>
 
 inline std::ostream& operator<<(std::ostream& output, Position pos) {
     return output << "(" << pos.row << ", " << pos.col << ")";
@@ -24,9 +26,9 @@ inline std::ostream& operator<<(std::ostream& output, const CellInterface::Value
 }
 
 namespace {
-std::string ToString(FormulaError::Category category) {
-    return std::string(FormulaError(category).ToString());
-}
+//std::string ToString(FormulaError::Category category) {
+//    return std::string(FormulaError(category).ToString());
+//}
 
 void TestPositionAndStringConversion() {
     auto testSingle = [](Position pos, std::string_view str) {
@@ -250,7 +252,7 @@ void TestErrorDiv0() {
 void TestEmptyCellTreatedAsZero() {
     auto sheet = CreateSheet();
     sheet->SetCell("A1"_pos, "=B2");
-    ASSERT_EQUAL(sheet->GetCell("A1"_pos)->GetValue(), CellInterface::Value(0));
+    ASSERT_EQUAL(sheet->GetCell("A1"_pos)->GetValue(), CellInterface::Value(0.0));
 }
 
 void TestFormulaInvalidPosition() {
@@ -333,8 +335,11 @@ void TestFormulaIncorrect() {
 void TestCellCircularReferences() {
     auto sheet = CreateSheet();
     sheet->SetCell("E2"_pos, "=E4");
+
     sheet->SetCell("E4"_pos, "=X9");
+
     sheet->SetCell("X9"_pos, "=M6");
+
     sheet->SetCell("M6"_pos, "Ready");
 
     bool caught = false;
@@ -343,8 +348,15 @@ void TestCellCircularReferences() {
     } catch (const CircularDependencyException&) {
         caught = true;
     }
+    bool caught2 = false;
+    try {
+        sheet->SetCell("A1"_pos, "=A1");
+    } catch (const CircularDependencyException&) {
+        caught2 = true;
+    }
 
     ASSERT(caught);
+    ASSERT(caught2);
     ASSERT_EQUAL(sheet->GetCell("M6"_pos)->GetText(), "Ready");
 }
 }  // namespace
@@ -370,4 +382,5 @@ int main() {
     RUN_TEST(tr, TestCellReferences);
     RUN_TEST(tr, TestFormulaIncorrect);
     RUN_TEST(tr, TestCellCircularReferences);
+    return 0;
 }
