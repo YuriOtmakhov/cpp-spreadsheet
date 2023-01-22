@@ -26,9 +26,9 @@ inline std::ostream& operator<<(std::ostream& output, const CellInterface::Value
 }
 
 namespace {
-//std::string ToString(FormulaError::Category category) {
-//    return std::string(FormulaError(category).ToString());
-//}
+std::string ToString(FormulaError::Category category) {
+    return std::string(FormulaError(category).ToString());
+}
 
 void TestPositionAndStringConversion() {
     auto testSingle = [](Position pos, std::string_view str) {
